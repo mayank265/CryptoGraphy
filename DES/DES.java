@@ -3,24 +3,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 class KeyScheduling {
-
-  public BigInteger getDecimal(String key) {
-    return new BigInteger(key ,16);
-  }
-
-  public String getBinary(String key) {
-    return new BigInteger(key ,16).toString(2);
-  }
-
   // Remove last two columns of the key and outputs 48 bit key
   public String keyPermutation1(String hexKey) {
-    String key = getBinary(hexKey);
+    String key = new BigInteger(hexKey ,16).toString(2);
     String keyAfterPC1 = "";
     for (int tviKey = 0 ; tviKey < key.length(); tviKey++) {
       if (((tviKey+1) % 8 != 0) && ((tviKey+2) % 8 != 0)) {
         keyAfterPC1 = keyAfterPC1.concat(Character.toString(key.charAt(tviKey)));
       }
     }
+
     return keyAfterPC1;
   }
 
@@ -32,6 +24,7 @@ class KeyScheduling {
         keyAfterPC2 = keyAfterPC2.concat(Character.toString(key.charAt(tviKey)));
       }
     }
+
     return keyAfterPC2;
   }
 
@@ -39,6 +32,7 @@ class KeyScheduling {
   public String leftShift(String key, int round) {
     String leftKey = key.substring(0, 24);
     String rightKey = key.substring(24);
+    round = round + 1;
     if (round == 1 || round == 2 || round == 9 || round == 16) {
       leftKey = leftKey.substring(1).concat("0");
       rightKey = rightKey.substring(1).concat("0");
@@ -46,6 +40,7 @@ class KeyScheduling {
       leftKey = leftKey.substring(2).concat("00");
       rightKey = rightKey.substring(2).concat("00");
     }
+
     return leftKey.concat(rightKey);
   }
 
@@ -152,6 +147,7 @@ class DESModified {
       keyArr.add(key);
     }
 
+    String round12Cipher = "";
     for (int index = 0; index < 16; index++) {
       if (option == 0) {
         key = keyArr.get(index);
@@ -184,16 +180,26 @@ class DESModified {
       // Final PlainText After an round is
       plainText = rightText.concat(fboxTextXorWithLeftText);
 
-      if ((index == 0 || index == 15) && option == 0) {
-        System.out.println("Sbox :"+ rightTextSBox + " "+ rightTextAfterPerm);
-        System.out.println("\nIn Round " + (index + 1) + " :  " + plainText);
+      if (option == 0 && (index == 11 || index == 15)) {
+        System.out.println("\nIn Round " + (index + 1) + "      :  " + plainText);
+        if (index == 11) {
+          round12Cipher = plainText;
+        } else {
+          int count = 0;
+          for (int tvindex = 0 ; tvindex < plainText.length(); tvindex++) {
+            if (plainText.charAt(tvindex) != round12Cipher.charAt(tvindex)) {
+              count++;
+            }
+          }
+          System.out.println("\nAvalanche Effect :  " + count + " differences between 12th and 16th round.");
+        }
       }
     }
 
     // Remaining Half Round, interchange the left and right chunks;
-    // String leftText = plainText.substring(0, 32);
-    // String rightText = plainText.substring(32);
-    // plainText = rightText.concat(leftText);
+    String leftText = plainText.substring(0, 32);
+    String rightText = plainText.substring(32);
+    plainText = rightText.concat(leftText);
 
     // Final Permutation
     String cipherText = finalPermutaion(plainText);
@@ -205,13 +211,23 @@ class DESModified {
 public class DES {
   public static void main(String []args) {
     // Change Plaintext here(16 Hex numbers)
-    String plainText = new BigInteger("FFFFFFFFFFFFFFFF" ,16).toString(2);
+    String plainText = "F0F0F0F0FFFFFFFF";
     // Change Key here(16 Hex numbers)
     String key = "FFFFFFFFFFFFFFFF";
 
+    if (plainText.length() != 16 || key.length() != 16) {
+      System.out.println("Looks Like Either of plainText or Key isn't of 16 Hex numbers");
+      System.exit(0);
+    }
+
     DESModified desModified = new DESModified();
-    System.out.println("\nPlainText   :  "+ plainText);
-    System.out.println("\nCipherText  :  "+ desModified.DESEncryption(plainText, key, 0));
-    System.out.println("\nDecryptText :  "+ desModified.DESEncryption(plainText, key, 1) + "\n");
+    System.out.println("\nPlainText        :  "+ plainText);
+    System.out.println("\nPlainText(Bin)   :  "+ new BigInteger(plainText ,16).toString(2));
+    String cipherText = desModified.DESEncryption(new BigInteger(plainText ,16).toString(2), key, 0);
+    System.out.println("\nCipherText       :  "+ new BigInteger(cipherText ,2).toString(16).toUpperCase());
+    System.out.println("\nCipherText(Bin)  :  "+ cipherText);
+    String decryptedText = desModified.DESEncryption(cipherText, key, 1);
+    System.out.println("\nDecryptText      :  "+ new BigInteger(decryptedText ,2).toString(16).toUpperCase());
+    System.out.println("\nDecryptText(Bin) :  "+ decryptedText + "\n");
   }
 }

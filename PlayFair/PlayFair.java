@@ -133,6 +133,8 @@ class PlayFairCrypto {
     String cipherText = textToAttack;
     cipherText = cipherText.toUpperCase();
     cipherText = cipherText.replaceAll("\\s+","");
+    knownPlainText = knownPlainText.toUpperCase();
+    knownPlainText = knownPlainText.replaceAll("\\s+","");
     LinkedHashMap<String, Integer> cipherArr = new LinkedHashMap<String, Integer>();
     ArrayList<String> cipherList = new ArrayList<String>();
     for (int i = 0; i < cipherText.length(); i++){
@@ -175,18 +177,29 @@ class PlayFairCrypto {
     double rangeFactor = ((double)maxValue - (double)minValue) / (double)commonDiagrams.size();
     rangeFactor += 0.000000001;
 
-    ArrayList<String> decryptedText = new ArrayList<String>();
+    ArrayList<String> decryptedTextArr = new ArrayList<String>();
+    String decryptedText = "";
     for (String key : cipherList) {
       int value = cipherArr.get(key);
       value = (int)((double)value / rangeFactor);
-      decryptedText.add(commonDiagramsKeys.get(value));
+      decryptedTextArr.add(commonDiagramsKeys.get(value));
+      decryptedText = decryptedText.concat(commonDiagramsKeys.get(value));
     }
 
     System.out.println("\n********************");
     System.out.println("Result after Decryption Using Diagrams Frequency Analysis (Refer PlainText in the Code)");
-    for (String pT: decryptedText) {
+    for (String pT: decryptedTextArr) {
       System.out.print(pT);
     }
+
+    int count = 0;
+    for (int tvindex = 0 ; tvindex < knownPlainText.length(); tvindex++) {
+      if (knownPlainText.charAt(tvindex) == decryptedText.charAt(tvindex)) {
+        count++;
+      }
+    }
+    System.out.println("\n\n\nTotal Matching Characters Found/Retrieved (using diagram frequency attack) are : "+ count + " " + " out of " + knownPlainText.length());
+
     System.out.println("\n********************\n");
   }
 
