@@ -1,2 +1,7 @@
 *.class
 *.out
+
+# Project Specific
+test
+testme
+exploit
