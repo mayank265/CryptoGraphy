@@ -2,6 +2,7 @@
 *.out
 
 # Project Specific
+.temp
 test
 testme
 exploit
